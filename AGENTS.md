@@ -15,13 +15,13 @@ Read `README.md` and `docs/SETUP.md` before changing setup or code.
 - Suppress repeated sends without suppressing normal newline repetition.
 - Preserve Japanese IME conversion confirmation; validate it with the actual input method in use.
 
-Support Japanese and English UI labels using exact matches: `プロンプト` / `Prompt` for normal prompts and `その他のオプション` / `Other option` for question answers.
-The observed Japanese quoted-reply label is `返信`; its English counterpart is unverified and must not be guessed as `Reply`.
+Support Japanese and English UI labels using exact matches: `プロンプト` / `Prompt` for normal prompts, `返信` / `Reply` for quoted replies, and `その他のオプション` / `Other option` for question answers.
 Only matching normal prompts are remapped, so quoted and other non-prompt fields retain native key handling without needing a recognized reply label.
 `More options` is a separate menu label, not a question-answer alias.
 After Claude locale changes, verify bundled aria-label/locale definitions or real Accessibility metadata before changing these exact labels.
 Do not add locale switches, broad partial matches, or inferred identifiers.
 Static definitions and mock checks do not establish real English-UI behavior or successful sending.
+GUI key tests must bring Claude to the foreground and focus the intended test field; background app-targeted input does not exercise the frontmost-app guard.
 
 ## Files and documentation
 

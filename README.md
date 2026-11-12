@@ -39,7 +39,6 @@ A transformed key-down gets the corresponding key-up transformation even if focu
 - The Japanese or English Claude UI
 - Hammerspoon with Accessibility permission
 
-Japanese and English prompt and question labels are recognized; real English-UI operation remains unverified.
 The target application identifier is `com.anthropic.claudefordesktop`.
 The configuration does not read or log input text.
 
@@ -118,6 +117,7 @@ The configuration only works while Hammerspoon is running.
 ## 4. Check your installation
 
 Use a test conversation and text that is safe to send.
+Bring Claude to the foreground and focus the target field before each key check; background app-targeted input does not exercise the frontmost-app guard.
 
 - [ ] Enter in the regular prompt inserts a newline without sending.
 - [ ] ⌘Enter in the regular prompt sends the message.
@@ -133,7 +133,7 @@ Use a test conversation and text that is safe to send.
 The regular prompt must have `AXRole = AXTextArea` and the exact name `プロンプト` or `Prompt`.
 The name comes from `AXDescription`, falling back to `AXTitle` if it is empty.
 Free-form question labels are `その他のオプション` and `Other option`; `More options` is a separate menu label.
-The Japanese quoted-reply name is `返信`; the English quoted-reply name remains unverified.
+Quoted-reply names are `返信` and `Reply`.
 Quoted and other non-prompt fields retain their native handling rather than relying on a known reply label.
 The focused element's owner PID must also match Claude's PID, because the application name alone cannot distinguish a launcher overlay.
 If the PID differs or cannot be read, the key is left unchanged.
@@ -182,7 +182,7 @@ end)
 ```
 
 Expect `role = AXTextArea`, name `プロンプト` or `Prompt`, and matching PIDs for a regular prompt.
-Question names are `その他のオプション` or `Other option`; the Japanese quoted-reply name is `返信`, while its English counterpart remains unverified.
+Question names are `その他のオプション` or `Other option`; quoted-reply names are `返信` or `Reply`.
 If you see `Retry`, focus a Claude input field during the delay and try again.
 
 ## Pause, remove, or restore
@@ -225,15 +225,17 @@ Enabling `hs.ipc` is not required for normal use or these console-based tests.
 
 ## Verification status
 
-The checked environment uses Hammerspoon 1.1.1 and Claude Desktop 5.1231.2 with the Japanese UI.
+The checked environment uses Hammerspoon 1.1.1 and Claude Desktop 5.1231.2.
+In a dedicated Code test conversation with the English (United States) UI, Enter inserted a newline without sending in the regular prompt, and ⌘Enter submitted from the regular prompt, quoted reply, and free-form question-answer field.
+These checks used Hammerspoon-generated global key events with Claude in the foreground and the intended field focused.
+The UI was restored to Japanese afterward.
+The English names `Prompt`, `Reply`, and `Other option` were observed on `AXTextArea` elements.
 The same 19 regression cases pass with Japanese and English label fixtures, for 38 successful mock checks.
 Test execution with both absolute and relative filenames has been checked in Hammerspoon's Lua runtime.
 The example's module loading has also been checked with mocks in a temporary configuration directory containing only the distribution files.
-Bundled aria-label and Japanese/English locale definitions confirm `Prompt` and `Other option`.
-The English quoted-reply fixture uses an unrecognized placeholder; its actual AX name and real English-UI operation or sending remain unverified.
 Running the tests with a standalone Lua CLI remains unverified.
 In one environment with the standard macOS Japanese input method, Enter committed conversion and the next Enter inserted a newline.
-End-to-end submission from all three input types, operation after logging in again, and operation on another Mac remain unverified.
+Physical-keyboard checks with the English UI, operation after logging in again, and operation on another Mac remain unverified.
 Run the installation checks above in your own environment.
 
 ## License

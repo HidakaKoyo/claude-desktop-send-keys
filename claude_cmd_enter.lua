@@ -16,7 +16,7 @@ function M.classify(element)
     if not name or name == "" then name = element:attributeValue("AXTitle") end
     -- shortcut: 日英のAXラベルに依存、Claudeのラベル変更時に実測して更新する
     if name == "プロンプト" or name == "Prompt" then return "normal" end
-    if name == "返信" then return "reply" end
+    if name == "返信" or name == "Reply" then return "reply" end
     if name == "その他のオプション" or name == "Other option" then return "question" end
     return "unknown"
 end

@@ -3,7 +3,7 @@ local callback, focused, bundle, appPid, enabled, warnings
 local passed = 0
 local locales = {
     { id = "ja", normal = "プロンプト", reply = "返信", replyClass = "reply", question = "その他のオプション", unknown = "検索" },
-    { id = "en", normal = "Prompt", reply = "Unverified quoted reply", replyClass = "unknown", question = "Other option", unknown = "Search" },
+    { id = "en", normal = "Prompt", reply = "Reply", replyClass = "reply", question = "Other option", unknown = "Search" },
 }
 local masks = { command = 0x100000, deviceLeftCommand = 0x8, deviceRightCommand = 0x10,
     shift = 0x20000, deviceLeftShift = 0x2 }
@@ -100,7 +100,7 @@ check("通常欄・引用欄・質問欄・不明を区別", function(m, labels)
     assert(m.classify(element(labels.unknown)) == "unknown")
     assert(m.classify(element(labels.normal, "AXTextField")) == "unknown")
     assert(m.classify(nil) == "unknown")
-    for _, name in ipairs({ "Reply", "More options", "Other options", "prompt", "Prompt ", "Prompt editor" }) do
+    for _, name in ipairs({ "Unverified quoted reply", "More options", "Other options", "prompt", "Prompt ", "Prompt editor" }) do
         assert(m.classify(element(name)) == "unknown")
     end
 end)

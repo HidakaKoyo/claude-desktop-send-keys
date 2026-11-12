@@ -5,7 +5,7 @@ Follow these steps when asked to install this repository's Claude Desktop keyboa
 ## Check and record the current setup
 
 1. Read `AGENTS.md` and either `README.md` or `docs/README.ja.md` for the full runbook.
-2. Confirm that this is macOS and that Claude Desktop uses the supported Japanese or English UI; English-UI operation still needs real-app validation.
+2. Confirm that this is macOS and that Claude Desktop uses the supported Japanese or English UI.
 3. Check whether Hammerspoon is installed; install and launch it first if needed, using Homebrew or the official distribution linked in the README.
 4. Choose Hammerspoon's **Open Console** and run `hs.configdir` to read the [effective configuration directory](https://www.hammerspoon.org/docs/hs.html#configdir).
 5. Use that directory for every module, `init.lua`, backup, and restoration step; do not assume `~/.hammerspoon` or install duplicate copies there.
@@ -42,7 +42,7 @@ Do not read `AXValue` or `AXSelectedText`, capture screenshots, or output input 
 
 A normal prompt is expected to have role `AXTextArea`, exact name `プロンプト` or `Prompt`, and an owner PID matching Claude's PID.
 Question-answer names are `その他のオプション` or `Other option`; do not substitute the separate menu label `More options`.
-The Japanese quoted-reply name is `返信`; its English counterpart is unverified, so do not infer `Reply` or change the language to make a label match.
+Quoted-reply names are `返信` and `Reply`; do not infer other names or change the language to make a label match.
 Only recognized normal prompts are remapped; quoted and other non-prompt fields retain native key handling.
 If focus was on the console or another app, repeat the delayed check with focus on Claude instead of changing the ownership guard.
 
@@ -51,6 +51,7 @@ If focus was on the console or another app, repeat the delayed check with focus 
 Run the 19 regression cases with both label fixtures as described in the README, then check the real application separately.
 The 38 mock checks and bundled aria-label/locale definitions are not evidence of real English-UI operation or successful sending.
 Use dedicated test conversations and obtain agreement before sending test messages.
+Bring Claude to the foreground and focus the intended field before each key check; background app-targeted input does not exercise the frontmost-app guard.
 
 - [ ] Enter in the regular prompt inserts a newline without sending.
 - [ ] ⌘Enter in the regular prompt sends the message.
