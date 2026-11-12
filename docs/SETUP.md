@@ -8,7 +8,7 @@ Follow these steps when asked to install this repository's Claude Desktop keyboa
 2. Confirm that this is macOS and that Claude Desktop uses the Japanese UI supported by the current module.
 3. Inspect the existing Hammerspoon setup and the relevant parts of `~/.hammerspoon/init.lua` without exposing unrelated settings or credentials.
 4. Check for existing Claude Enter remaps in Karabiner-Elements or similar tools.
-5. Keep the repository private and leave its source files unchanged during installation.
+5. Leave the repository source files unchanged during installation.
 
 Do not change Claude's UI language or infer new input-field labels to make installation proceed.
 If the environment is unsupported, explain the limitation before changing settings.

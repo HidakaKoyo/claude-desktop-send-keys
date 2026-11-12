@@ -64,7 +64,7 @@ Keep unrelated app rules and Japanese input-switching rules in place.
 
 ## 3. Install the configuration
 
-This repository is currently private, so cloning requires repository access.
+For a private repository, authenticate with a GitHub account that has access before cloning.
 The example below uses `$HOME/claude-desktop-send-keys` as the checkout directory.
 If that directory already exists, inspect its contents rather than cloning over it.
 

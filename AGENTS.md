@@ -3,7 +3,6 @@
 ## Purpose and scope
 
 This repository provides a small Hammerspoon configuration for Claude Desktop on macOS.
-It is being developed privately; keep it private until the maintainer explicitly requests a visibility change.
 Read `README.md` and `docs/SETUP.md` before changing setup or code.
 
 ## Behavior to preserve

@@ -64,7 +64,7 @@ Karabiner-ElementsなどでClaude用のEnter変換を使っている場合は、
 
 ## 3. ファイルを配置する
 
-このリポジトリは現在privateのため、cloneにはリポジトリへのアクセス権が必要です。
+privateリポジトリをクローンする場合は、アクセス権のあるGitHubアカウントで認証しておいてください。
 次は、取得先を`$HOME/claude-desktop-send-keys`とする例です。
 同名の取得先が既にある場合は、新規にcloneせず、既存の内容を確認してください。
 
