@@ -201,10 +201,13 @@ Resume with `claudeCmdEnter.start()` or **Reload Config**.
 To keep it disabled, remove only the two lines added for this configuration from `init.lua`, then choose **Reload Config**.
 Once disabled, remove only this module from the effective directory if it is no longer needed; keep unrelated files.
 This removes the integration but does not restore the pre-install setup.
+Before restoring files, release the keys and stop this rule with `claudeCmdEnter.stop()` if it is still loaded.
 For restoration, use the directory recorded in the private backup's `configdir.txt` and compare the saved `init.lua` and module with the current files.
 Restore replaced files from that backup only after checking for later edits; merge any later unrelated changes instead of overwriting whole files.
 If a file was newly created, remove only this configuration's two lines or its own module, preserving other content.
+After restoring the files, choose **Reload Config** and confirm in **Open Console** that there are no loading errors before re-enabling old remaps.
 Re-enable only the old Karabiner rules disabled for this installation, and restore the recorded launch-at-login setting if it was changed.
+Use a test conversation to confirm Enter and ⌘Enter behave as expected in the restored setup.
 Never delete the entire configuration directory or restore a backup unconditionally.
 
 ## Tests

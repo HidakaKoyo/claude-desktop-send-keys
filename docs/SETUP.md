@@ -80,11 +80,14 @@ To keep the integration disabled, remove only its two integration lines from the
 Remove only its module if no longer needed, preserving all unrelated settings.
 These steps remove the integration but do not restore the pre-install setup.
 
+Before restoring files, release the keys and stop this rule with `claudeCmdEnter.stop()` if it is still loaded.
 To restore the pre-install state, use the effective directory recorded in the private backup's `configdir.txt`.
 Compare the backed-up `init.lua` and module with the current files before restoring replaced files.
 If unrelated changes were made after installation, merge them instead of overwriting the whole file from backup.
 For newly created files, remove only this configuration's integration lines or its own module while retaining other content.
+After restoring the files, choose **Reload Config** and confirm in **Open Console** that there are no loading errors before re-enabling old remaps.
 Re-enable only the old Karabiner rules disabled during this installation, and restore the recorded launch-at-login setting if it was changed.
+Use a test conversation to confirm Enter and ⌘Enter behave as expected in the restored setup.
 Never delete the whole configuration directory or restore a backup unconditionally.
 
 ## Report the result
