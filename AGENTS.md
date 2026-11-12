@@ -24,11 +24,13 @@ English documentation does not imply support for Claude's English UI.
 - `claude_cmd_enter.lua`: runtime behavior and input-field classification.
 - `test.lua`: mock-based regression tests.
 - `init.example.lua`: minimal integration with an existing Hammerspoon configuration.
-- `README.md`: canonical English installation and operating guide.
-- `docs/README.ja.md`: Japanese translation of the guide.
+- `README.md`: English installation and operating guide.
+- `docs/README.ja.md`: Japanese version of the same guide.
 - `docs/CONTINUATION_PROMPT.md`: self-contained prompt for continuing development.
 
-Keep both README versions aligned when changing behavior, commands, limits, or validation status.
+Keep both README versions semantically equivalent; only the language and relative link paths should differ.
+When changing behavior, commands, limits, or validation status, update both versions in the same change.
+Do not add reader-facing policies or maintenance notes to only one language version.
 Maintain the language links and the agent-document links near the beginning of both READMEs.
 Check relative links from each document's own directory.
 

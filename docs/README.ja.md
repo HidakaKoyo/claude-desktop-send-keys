@@ -5,7 +5,6 @@
 Claudeデスクトップの通常入力欄を「Enterで改行、⌘Enterで送信」にするHammerspoon設定です。
 引用への返信や質問への回答では本来の⌘Enterを残し、送信操作を妨げないようにします。
 この手順で、新しいMacにも同じ設定を導入できます。
-手順の正本は[英語のREADME](../README.md)です。
 
 作業を引き継ぐ場合は、[AGENTS.md](../AGENTS.md)と[継続プロンプト](CONTINUATION_PROMPT.md)を参照してください。
 次の短い依頼文から続けられます。

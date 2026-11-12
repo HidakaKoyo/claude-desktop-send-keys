@@ -43,7 +43,7 @@ Remaining verification
 2. With the maintainer's agreement, use dedicated test conversations to validate actual send behavior in normal prompts, quoted replies, and question-answer fields.
 3. Validate Japanese IME confirmation, normal newlines, launcher overlays such as Raycast, and unrelated applications.
 4. Validate login startup, installation, and rollback on another Mac or clearly state which parts remain unverified.
-5. Update README.md and docs/README.ja.md together with evidence and remaining limits.
+5. Update README.md and docs/README.ja.md together with the same content, evidence, and remaining limits; only the language and relative link paths should differ.
 
 Constraints
 
