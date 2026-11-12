@@ -56,9 +56,18 @@ Launch Hammerspoon and allow it in macOS System Settings → Privacy & Security 
 If the permission does not take effect, quit and reopen Hammerspoon.
 See the [official setup guide](https://www.hammerspoon.org/go/) for installation and permission details.
 
-## 2. Disable conflicting Enter remaps
+## 2. Record the current setup
 
-If Karabiner-Elements or another tool remaps Enter for Claude, disable that rule.
+Before changes, privately record which Claude Enter rules are enabled in Karabiner or similar tools and Hammerspoon's launch-at-login setting.
+Choose **Open Console** in Hammerspoon and run this to obtain the [effective configuration directory](https://www.hammerspoon.org/docs/hs.html#configdir):
+
+```lua
+hs.configdir
+```
+
+Use the default `HS_CONFIG_DIR` assignment below only if this result matches `$HOME/.hammerspoon`; otherwise replace that assignment with the actual result.
+Use this same effective directory for the module, `init.lua`, and recovery; do not also install another copy in `~/.hammerspoon`.
+If Karabiner-Elements or another tool remaps Enter for Claude, disable only those conflicting rules after recording their prior state.
 An existing ⌘Enter-to-Enter rule prevents quoted replies and question-answer fields from receiving native ⌘Enter.
 Keep unrelated app rules and Japanese input-switching rules in place.
 
@@ -69,15 +78,30 @@ The example below uses `$HOME/claude-desktop-send-keys` as the checkout director
 If that directory already exists, inspect its contents rather than cloning over it.
 
 ```sh
-git clone https://github.com/HidakaKoyo/claude-desktop-send-keys.git "$HOME/claude-desktop-send-keys"
-cd "$HOME/claude-desktop-send-keys"
-mkdir -p "$HOME/.hammerspoon"
-cp -i claude_cmd_enter.lua "$HOME/.hammerspoon/claude_cmd_enter.lua"
+HS_CONFIG_DIR="$HOME/.hammerspoon"
+(
+  set -eu
+  git clone https://github.com/HidakaKoyo/claude-desktop-send-keys.git "$HOME/claude-desktop-send-keys"
+  cd "$HOME/claude-desktop-send-keys"
+  BACKUP_DIR="$(mktemp -d "$HOME/claude-send-keys-backup.XXXXXX")"
+  chmod 700 "$BACKUP_DIR"
+  printf '%s\n' "$HS_CONFIG_DIR" > "$BACKUP_DIR/configdir.txt"
+  for file in init.lua claude_cmd_enter.lua; do
+    if [ -f "$HS_CONFIG_DIR/$file" ]; then
+      cp -p "$HS_CONFIG_DIR/$file" "$BACKUP_DIR/$file"
+    fi
+  done
+  printf 'Backup: %s\n' "$BACKUP_DIR"
+  mkdir -p "$HS_CONFIG_DIR"
+  cp -i claude_cmd_enter.lua "$HS_CONFIG_DIR/claude_cmd_enter.lua"
+)
 ```
 
+The block backs up existing files before copying, and stops if a command fails.
+Keep the printed backup directory and the pre-change settings note private and local; never add them to the repository.
 If `cp -i` asks to overwrite a module, inspect the existing file before deciding.
 Choose **Open Config** from the Hammerspoon menu-bar menu.
-Add or merge these two lines into the existing `~/.hammerspoon/init.lua`; do not overwrite the file.
+If `init.lua` does not exist, create it in the effective directory; otherwise merge these two lines into `$HS_CONFIG_DIR/init.lua` without overwriting other settings.
 Do not add a duplicate if this module is already loaded.
 
 ```lua
@@ -124,14 +148,42 @@ It cannot work when macOS Secure Input or another restriction prevents access to
 - Check Accessibility permission; restart Hammerspoon if a granted permission has not taken effect.
 - Choose **Open Console** and check for configuration-loading errors.
 - Check for remaining Claude Enter remaps in Karabiner or similar tools.
-- Check that Claude's UI language and input-field names match the conditions above.
+- Use [field diagnostics](#field-diagnostics) to check the UI labels rather than guessing them.
 - Keys remaining unchanged while a launcher is open is expected behavior.
 - If Japanese conversion cannot be committed, pause the configuration until you have checked that IME.
 
 Do not remove the owner-PID check as a workaround.
 Doing so can remap keys belonging to another application that has input focus.
 
-## Pause or remove
+## Field diagnostics
+
+In **Open Console**, run this, focus the target Claude input field within five seconds, then return to the console after five seconds to read the result.
+Only role, `AXDescription`, `AXTitle`, owner PID, and Claude PID are printed; input values, selections, and screenshots are not captured.
+A console or non-Claude field only produces a retry instruction, without printing its title.
+The example uses the [Accessibility API](https://www.hammerspoon.org/docs/hs.axuielement.html) and [doAfter](https://www.hammerspoon.org/docs/hs.timer.html#doAfter).
+
+```lua
+claudeSendKeysDiagnosticTimer = hs.timer.doAfter(5, function()
+  local app = hs.application.get("com.anthropic.claudefordesktop")
+  if not app then print("Retry: focus a Claude input field."); return end
+  local el = hs.axuielement.systemWideElement():attributeValue("AXFocusedUIElement")
+  if not el then print("Retry: focus a Claude input field."); return end
+  local role, owner, pid = el:attributeValue("AXRole"), el:pid(), app:pid()
+  if not pid or owner ~= pid or (role ~= "AXTextArea" and role ~= "AXTextField") then
+    print("Retry: focus a Claude input field."); return
+  end
+  print(hs.inspect({
+    role = role, AXDescription = el:attributeValue("AXDescription"),
+    AXTitle = el:attributeValue("AXTitle"), ownerPID = owner, claudePID = pid
+  }))
+end)
+```
+
+Expect `role = AXTextArea`, name `プロンプト`, and matching PIDs for a regular prompt.
+Observed names are `返信` for quoted replies and `その他のオプション` for question answers.
+If you see `Retry`, focus a Claude input field during the delay and try again.
+
+## Pause, remove, or restore
 
 Release the keys, open Hammerspoon's **Open Console**, and run:
 
@@ -141,8 +193,13 @@ claudeCmdEnter.stop()
 
 Resume with `claudeCmdEnter.start()` or **Reload Config**.
 To keep it disabled, remove only the two lines added for this configuration from `init.lua`, then choose **Reload Config**.
-Once disabled, you can remove `~/.hammerspoon/claude_cmd_enter.lua` if no longer needed.
-Keep any `init.lua` and configuration directory that contain other settings.
+Once disabled, remove only this module from the effective directory if it is no longer needed; keep unrelated files.
+This removes the integration but does not restore the pre-install setup.
+For restoration, use the directory recorded in the private backup's `configdir.txt` and compare the saved `init.lua` and module with the current files.
+Restore replaced files from that backup only after checking for later edits; merge any later unrelated changes instead of overwriting whole files.
+If a file was newly created, remove only this configuration's two lines or its own module, preserving other content.
+Re-enable only the old Karabiner rules disabled for this installation, and restore the recorded launch-at-login setting if it was changed.
+Never delete the entire configuration directory or restore a backup unconditionally.
 
 ## Tests
 

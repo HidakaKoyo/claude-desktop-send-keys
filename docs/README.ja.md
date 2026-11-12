@@ -56,9 +56,19 @@ Hammerspoonを起動し、macOSの「システム設定 → プライバシー�
 許可しても反映されない場合は、Hammerspoonを終了してから起動し直します。
 起動と権限設定の詳細は[公式の導入ガイド](https://www.hammerspoon.org/go/)も参照してください。
 
-## 2. 既存のEnter変換と競合させない
+## 2. 導入前の状態を記録する
 
-Karabiner-ElementsなどでClaude用のEnter変換を使っている場合は、そのルールを無効にしてください。
+変更前に、KarabinerなどのClaude用Enterルールの有効状態と、Hammerspoonのログイン時起動設定をローカルの非公開メモへ記録してください。
+Hammerspoonの「Open Console」で次を実行し、[実効設定ディレクトリ](https://www.hammerspoon.org/docs/hs.html#configdir)を確認します。
+
+```lua
+hs.configdir
+```
+
+結果が`$HOME/.hammerspoon`と一致する場合だけ、下の`HS_CONFIG_DIR`の標準値を使います。
+異なる場合は、その代入行を実際の値に差し替えてください。
+モジュール、`init.lua`、復旧には同じ実効ディレクトリを使い、別途`~/.hammerspoon`へ二重に配置しません。
+Karabinerなどの競合するClaude用Enterルールは、変更前の状態を記録してから、そのルールだけを無効にします。
 特に「⌘EnterをEnterにする」ルールが残ると、引用や質問の回答欄へ本来の⌘Enterが届かなくなります。
 他のアプリ用の設定や、日本語入力の切り替え設定をまとめて外す必要はありません。
 
@@ -69,15 +79,30 @@ privateリポジトリをクローンする場合は、アクセス権のあるG
 同名の取得先が既にある場合は、新規にcloneせず、既存の内容を確認してください。
 
 ```sh
-git clone https://github.com/HidakaKoyo/claude-desktop-send-keys.git "$HOME/claude-desktop-send-keys"
-cd "$HOME/claude-desktop-send-keys"
-mkdir -p "$HOME/.hammerspoon"
-cp -i claude_cmd_enter.lua "$HOME/.hammerspoon/claude_cmd_enter.lua"
+HS_CONFIG_DIR="$HOME/.hammerspoon"
+(
+  set -eu
+  git clone https://github.com/HidakaKoyo/claude-desktop-send-keys.git "$HOME/claude-desktop-send-keys"
+  cd "$HOME/claude-desktop-send-keys"
+  BACKUP_DIR="$(mktemp -d "$HOME/claude-send-keys-backup.XXXXXX")"
+  chmod 700 "$BACKUP_DIR"
+  printf '%s\n' "$HS_CONFIG_DIR" > "$BACKUP_DIR/configdir.txt"
+  for file in init.lua claude_cmd_enter.lua; do
+    if [ -f "$HS_CONFIG_DIR/$file" ]; then
+      cp -p "$HS_CONFIG_DIR/$file" "$BACKUP_DIR/$file"
+    fi
+  done
+  printf 'Backup: %s\n' "$BACKUP_DIR"
+  mkdir -p "$HS_CONFIG_DIR"
+  cp -i claude_cmd_enter.lua "$HS_CONFIG_DIR/claude_cmd_enter.lua"
+)
 ```
 
+このブロックは既存ファイルをコピー前にバックアップし、コマンドが失敗した場合は停止します。
+表示されたバックアップ先と変更前の設定メモはローカルで非公開に保ち、リポジトリへ追加しません。
 `cp -i`で上書きを聞かれた場合は、既存のモジュールを確認してから判断してください。
 メニューバーのHammerspoonから「Open Config」を開きます。
-既存の`~/.hammerspoon/init.lua`は上書きせず、次の2行を既存の設定に追加してください。
+`init.lua`がなければ実効ディレクトリ内に作成し、既存ならほかの設定を上書きせず、`$HS_CONFIG_DIR/init.lua`へ次の2行を追加してください。
 同じモジュールを既に読み込んでいる場合は、重複して追加しません。
 
 ```lua
@@ -124,14 +149,42 @@ macOSのセキュア入力などでキーイベントを取得できない場合
 - アクセシビリティ権限を確認し、許可が反映されていなければHammerspoonを再起動します。
 - 「Open Console」で設定の読み込みエラーを確認します。
 - KarabinerなどにClaude用のEnter変換が残っていないか確認します。
-- Claudeの表示言語と入力欄の名前が、上記の条件に一致するか確認します。
+- ラベルを推測せず、[入力欄の診断](#入力欄の診断)で確認します。
 - ランチャー表示中に変換されないのは意図した動作です。
 - 日本語変換を確定できない場合は一時停止し、使用するIMEでの確認が済むまで有効にしません。
 
 所有PIDの照合条件を外して対処しないでください。
 フォーカスを持つ別アプリのキーまで変換する原因になります。
 
-## 一時停止と解除
+## 入力欄の診断
+
+「Open Console」で次を実行し、5秒以内にClaudeの対象入力欄へフォーカスを移してから、5秒経過後にコンソールへ戻って結果を確認します。
+出力するのはrole、`AXDescription`、`AXTitle`、所有PID、ClaudeのPIDだけで、入力値、選択範囲、スクリーンショットは取得しません。
+コンソールやClaude以外の欄にフォーカスがある場合は、タイトルを出さず、再試行の案内だけを表示します。
+この例は[Accessibility API](https://www.hammerspoon.org/docs/hs.axuielement.html)と[doAfter](https://www.hammerspoon.org/docs/hs.timer.html#doAfter)を使います。
+
+```lua
+claudeSendKeysDiagnosticTimer = hs.timer.doAfter(5, function()
+  local app = hs.application.get("com.anthropic.claudefordesktop")
+  if not app then print("Retry: focus a Claude input field."); return end
+  local el = hs.axuielement.systemWideElement():attributeValue("AXFocusedUIElement")
+  if not el then print("Retry: focus a Claude input field."); return end
+  local role, owner, pid = el:attributeValue("AXRole"), el:pid(), app:pid()
+  if not pid or owner ~= pid or (role ~= "AXTextArea" and role ~= "AXTextField") then
+    print("Retry: focus a Claude input field."); return
+  end
+  print(hs.inspect({
+    role = role, AXDescription = el:attributeValue("AXDescription"),
+    AXTitle = el:attributeValue("AXTitle"), ownerPID = owner, claudePID = pid
+  }))
+end)
+```
+
+通常欄の期待値は`role = AXTextArea`、名前が「プロンプト」、2つのPIDが一致することです。
+引用欄は「返信」、質問の回答欄は「その他のオプション」という名前が観察されています。
+`Retry`が出た場合は、待ち時間の間にClaudeの入力欄へフォーカスを移して再試行してください。
+
+## 一時停止、解除、導入前への復旧
 
 キーを離した状態で、Hammerspoonの「Open Console」から次を実行すると一時停止します。
 
@@ -141,8 +194,13 @@ claudeCmdEnter.stop()
 
 再開は`claudeCmdEnter.start()`、または「Reload Config」です。
 継続して解除する場合は、`init.lua`に追加したこの設定の2行だけを外して「Reload Config」を実行します。
-解除後、不要なら`~/.hammerspoon/claude_cmd_enter.lua`も削除できます。
-ほかの設定を含む`init.lua`やHammerspoonの設定フォルダ全体は削除しません。
+解除後は、不要になったこのモジュールだけを実効ディレクトリから取り除き、ほかのファイルを保持します。
+これは連携の解除であり、導入前の状態への復旧とは異なります。
+復旧には非公開バックアップの`configdir.txt`に記録したディレクトリを使い、保存した`init.lua`とモジュールを現在のファイルと比較します。
+置換したファイルをバックアップから戻す前に導入後の変更を確認し、ほかの変更があればファイル全体を上書きせず統合してください。
+新規作成したファイルでは、この設定の2行や専用モジュールだけを取り除き、ほかの内容を保持します。
+旧Karabinerルールは今回無効にしたものだけを元へ戻し、ログイン時起動も変更していれば記録した状態へ戻してください。
+設定ディレクトリ全体の削除や、バックアップからの無条件の一括上書きはしません。
 
 ## テスト
 
