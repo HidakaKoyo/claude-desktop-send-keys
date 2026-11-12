@@ -1,6 +1,10 @@
 local directory = debug.getinfo(1, "S").source:sub(2):match("^(.*)/") or "."
 local callback, focused, bundle, appPid, enabled, warnings
 local passed = 0
+local locales = {
+    { id = "ja", normal = "プロンプト", reply = "返信", replyClass = "reply", question = "その他のオプション", unknown = "検索" },
+    { id = "en", normal = "Prompt", reply = "Unverified quoted reply", replyClass = "unknown", question = "Other option", unknown = "Search" },
+}
 local masks = { command = 0x100000, deviceLeftCommand = 0x8, deviceRightCommand = 0x10,
     shift = 0x20000, deviceLeftShift = 0x2 }
 local commandMask = masks.command | masks.deviceLeftCommand | masks.deviceRightCommand
@@ -68,48 +72,53 @@ local function event(kind, flags, key, repeating, raw)
 end
 
 local function check(name, fn)
-    local originalHs = hs
-    hs = mock
-    local ok, failure = pcall(function()
-        focused, bundle = element("プロンプト"), "com.anthropic.claudefordesktop"
-        appPid = 100
-        warnings, enabled = 0, false
-        local module = dofile(directory .. "/claude_cmd_enter.lua")
-        assert(module.start())
-        fn(module)
-        module.stop()
-        assert(not enabled)
-    end)
-    hs = originalHs
-    assert(ok, name .. ": " .. tostring(failure))
-    passed = passed + 1
+    for _, labels in ipairs(locales) do
+        local originalHs = hs
+        hs = mock
+        local ok, failure = pcall(function()
+            focused, bundle = element(labels.normal), "com.anthropic.claudefordesktop"
+            appPid = 100
+            warnings, enabled = 0, false
+            local module = dofile(directory .. "/claude_cmd_enter.lua")
+            assert(module.start())
+            fn(module, labels)
+            module.stop()
+            assert(not enabled)
+        end)
+        hs = originalHs
+        assert(ok, labels.id .. " / " .. name .. ": " .. tostring(failure))
+        passed = passed + 1
+    end
 end
 
-check("通常欄・引用欄・質問欄・不明を区別", function(m)
+check("通常欄・引用欄・質問欄・不明を区別", function(m, labels)
     assert(m.classify(focused) == "normal")
-    assert(m.classify(element("返信")) == "reply")
-    assert(m.classify(element("その他のオプション")) == "question")
-    assert(m.classify(element(nil, nil, "プロンプト")) == "normal")
-    assert(m.classify(element("", nil, "プロンプト")) == "normal")
-    assert(m.classify(element("検索")) == "unknown")
-    assert(m.classify(element("プロンプト", "AXTextField")) == "unknown")
+    assert(m.classify(element(labels.reply)) == labels.replyClass)
+    assert(m.classify(element(labels.question)) == "question")
+    assert(m.classify(element(nil, nil, labels.normal)) == "normal")
+    assert(m.classify(element("", nil, labels.normal)) == "normal")
+    assert(m.classify(element(labels.unknown)) == "unknown")
+    assert(m.classify(element(labels.normal, "AXTextField")) == "unknown")
     assert(m.classify(nil) == "unknown")
+    for _, name in ipairs({ "Reply", "More options", "Other options", "prompt", "Prompt ", "Prompt editor" }) do
+        assert(m.classify(element(name)) == "unknown")
+    end
 end)
 
-check("通常欄の押下・解放を変換し他のrawフラグを保持", function()
+check("通常欄の押下・解放を変換し他のrawフラグを保持", function(_, labels)
     local down, up = event("down"), event("up")
     assert(callback(down) == false and down.raw == retained)
     assert(callback(up) == false and up.raw == retained)
 end)
 
-check("通常欄の裸Enterは押下・解放ともShiftを加えて改行", function()
+check("通常欄の裸Enterは押下・解放ともShiftを加えて改行", function(_, labels)
     local down, up = event("down", {}), event("up", {})
     assert(callback(down) == false and down.raw == (retained | shiftMask))
     assert(callback(up) == false and up.raw == (retained | shiftMask))
 end)
 
-check("引用・質問・不明な欄は通過", function()
-    for _, name in ipairs({ "返信", "その他のオプション", "検索" }) do
+check("引用・質問・不明な欄は通過", function(_, labels)
+    for _, name in ipairs({ labels.reply, labels.question, labels.unknown }) do
         focused = element(name)
         for _, flags in ipairs({ {}, { cmd = true } }) do
             for _, kind in ipairs({ "down", "up" }) do
@@ -121,7 +130,7 @@ check("引用・質問・不明な欄は通過", function()
     end
 end)
 
-check("Shift・Alt・Ctrl・Fn修飾Enterと他のキーは通過", function()
+check("Shift・Alt・Ctrl・Fn修飾Enterと他のキーは通過", function(_, labels)
     for _, modifier in ipairs({ "shift", "ctrl", "alt", "fn" }) do
         for _, cmd in ipairs({ false, true }) do
             local flags = { [modifier] = true, cmd = cmd }
@@ -134,7 +143,7 @@ check("Shift・Alt・Ctrl・Fn修飾Enterと他のキーは通過", function()
     assert(callback(e) == false and e.raw == (commandMask | retained))
 end)
 
-check("改行は長押しでもリピートを変換して通す", function()
+check("改行は長押しでもリピートを変換して通す", function(_, labels)
     callback(event("down", {}))
     for _ = 1, 3 do
         local e = event("down", {}, nil, true)
@@ -144,25 +153,25 @@ check("改行は長押しでもリピートを変換して通す", function()
     assert(callback(up) == false and up.raw == (retained | shiftMask))
 end)
 
-check("改行押下から別PIDに移ったリピートはそのまま通す", function()
+check("改行押下から別PIDに移ったリピートはそのまま通す", function(_, labels)
     callback(event("down", {}))
-    focused = element("プロンプト", nil, nil, 200)
+    focused = element(labels.normal, nil, nil, 200)
     local e = event("down", {}, nil, true)
     assert(callback(e) == false and e.raw == retained)
     local up = event("up", {})
     assert(callback(up) == false and up.raw == (retained | shiftMask))
 end)
 
-check("改行押下から質問欄に移ったリピートはそのまま通す", function()
+check("改行押下から質問欄に移ったリピートはそのまま通す", function(_, labels)
     callback(event("down", {}))
-    focused = element("その他のオプション")
+    focused = element(labels.question)
     local e = event("down", {}, nil, true)
     assert(callback(e) == false and e.raw == retained)
 end)
 
-check("他アプリ・アプリなし・フォーカス不明は通過", function()
+check("他アプリ・アプリなし・フォーカス不明は通過", function(_, labels)
     for _, flags in ipairs({ {}, { cmd = true } }) do
-        bundle, focused = "com.apple.TextEdit", element("プロンプト")
+        bundle, focused = "com.apple.TextEdit", element(labels.normal)
         local e = event("down", flags)
         local before = e.raw
         assert(callback(e) == false and e.raw == before)
@@ -173,11 +182,11 @@ check("他アプリ・アプリなし・フォーカス不明は通過", functio
     end
 end)
 
-check("通常欄のリピートを抑止しCommandを離しても二重送信しない", function()
+check("通常欄のリピートを抑止しCommandを離しても二重送信しない", function(_, labels)
     assert(callback(event("down")) == false)
     assert(callback(event("down", nil, nil, true)) == true)
     assert(callback(event("down", {}, nil, true)) == true)
-    focused = element("その他のオプション")
+    focused = element(labels.question)
     assert(callback(event("down", nil, nil, true)) == true)
     local up = event("up")
     assert(callback(up) == false and up.raw == retained)
@@ -185,9 +194,9 @@ check("通常欄のリピートを抑止しCommandを離しても二重送信し
     assert(callback(nextDown) == false and nextDown.raw == (commandMask | retained))
 end)
 
-check("別アプリに移ったリピートを通し対応する解放は維持", function()
+check("別アプリに移ったリピートを通し対応する解放は維持", function(_, labels)
     assert(callback(event("down")) == false)
-    focused, bundle = element("その他のオプション", nil, nil, 200), "com.apple.TextEdit"
+    focused, bundle = element(labels.question, nil, nil, 200), "com.apple.TextEdit"
     local repeatEvent = event("down", nil, nil, true)
     assert(callback(repeatEvent) == false and repeatEvent.raw == (commandMask | retained))
     local up = event("up")
@@ -196,8 +205,8 @@ check("別アプリに移ったリピートを通し対応する解放は維持"
     assert(callback(nextDown) == false and nextDown.raw == (commandMask | retained))
 end)
 
-check("前面がClaudeでも別PIDの同名入力欄を変換しない", function()
-    focused = element("プロンプト", nil, nil, 200)
+check("前面がClaudeでも別PIDの同名入力欄を変換しない", function(_, labels)
+    focused = element(labels.normal, nil, nil, 200)
     for _, flags in ipairs({ {}, { cmd = true } }) do
         local down = event("down", flags)
         local before = down.raw
@@ -205,50 +214,50 @@ check("前面がClaudeでも別PIDの同名入力欄を変換しない", functio
     end
 end)
 
-check("所有PIDまたはClaudeのPIDが不明なら通過", function()
+check("所有PIDまたはClaudeのPIDが不明なら通過", function(_, labels)
     for _, flags in ipairs({ {}, { cmd = true } }) do
-        focused, appPid = element("プロンプト", nil, nil, false), 100
+        focused, appPid = element(labels.normal, nil, nil, false), 100
         local down = event("down", flags)
         local before = down.raw
         assert(callback(down) == false and down.raw == before)
-        focused, appPid = element("プロンプト"), nil
+        focused, appPid = element(labels.normal), nil
         assert(callback(down) == false and down.raw == before)
     end
 end)
 
-check("前面がClaudeのままでもオーバーレイのリピートを止めない", function()
+check("前面がClaudeのままでもオーバーレイのリピートを止めない", function(_, labels)
     callback(event("down"))
-    focused = element("プロンプト", nil, nil, 200)
+    focused = element(labels.normal, nil, nil, 200)
     local repeatEvent = event("down", nil, nil, true)
     assert(callback(repeatEvent) == false and repeatEvent.raw == (commandMask | retained))
     local up = event("up")
     assert(callback(up) == false and up.raw == retained)
 end)
 
-check("押下後に所有PID不明になったリピートも通過", function()
+check("押下後に所有PID不明になったリピートも通過", function(_, labels)
     callback(event("down"))
-    focused = element("プロンプト", nil, nil, false)
+    focused = element(labels.normal, nil, nil, false)
     local repeatEvent = event("down", nil, nil, true)
     assert(callback(repeatEvent) == false and repeatEvent.raw == (commandMask | retained))
 end)
 
-check("キー解放を取り逃しても次の新規押下で状態を捨てる", function()
+check("キー解放を取り逃しても次の新規押下で状態を捨てる", function(_, labels)
     callback(event("down"))
-    focused = element("返信")
+    focused = element(labels.reply)
     local down, up = event("down"), event("up")
     assert(callback(down) == false and down.raw == (commandMask | retained))
     assert(callback(up) == false and up.raw == (commandMask | retained))
 end)
 
-check("改行の解放を取り逃しても次の新規押下を改変しない", function()
+check("改行の解放を取り逃しても次の新規押下を改変しない", function(_, labels)
     callback(event("down", {}))
-    focused = element("返信")
+    focused = element(labels.reply)
     local down, up = event("down", {}), event("up", {})
     assert(callback(down) == false and down.raw == retained)
     assert(callback(up) == false and up.raw == retained)
 end)
 
-check("テンキーEnterは通常Enterと独立して対応", function()
+check("テンキーEnterは通常Enterと独立して対応", function(_, labels)
     for _, flags in ipairs({ {}, { cmd = true } }) do
         local expected = flags.cmd and retained or (retained | shiftMask)
         local down = event("down", flags, 76)
@@ -261,7 +270,7 @@ check("テンキーEnterは通常Enterと独立して対応", function()
     end
 end)
 
-check("Accessibility例外では変更せず警告を出す", function()
+check("Accessibility例外では変更せず警告を出す", function(_, labels)
     focused = { pid = function() return appPid end,
         attributeValue = function() error("AX unavailable") end }
     local e = event("down")
