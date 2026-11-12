@@ -1,57 +1,69 @@
 # Claude Desktop Send Keys
 
-Claudeデスクトップの通常入力欄を「Enterで改行、⌘Enterで送信」にするHammerspoon設定です。
-引用への返信や質問への回答では本来の⌘Enterを残し、送信操作を妨げないようにします。
-この手順で、新しいMacにも同じ設定を導入できます。
+[English](README.md) | [日本語](docs/README.ja.md)
 
-## 動作
+A Hammerspoon configuration that makes Enter insert a newline and ⌘Enter send in the regular Claude Desktop prompt.
+It preserves the native ⌘Enter behavior in quoted replies and question-answer fields.
+Use this runbook to reproduce the configuration on another Mac.
 
-| 場所とキー | この設定の処理 |
+For further work, read [AGENTS.md](AGENTS.md) and the [continuation prompt](docs/CONTINUATION_PROMPT.md).
+You can start with this short request:
+
+```text
+Read AGENTS.md, README.md, and docs/CONTINUATION_PROMPT.md.
+Continue the remaining verification while keeping the repo private and preserving input-field ownership checks.
+```
+
+## Behavior
+
+| Context and key | What this configuration does |
 | --- | --- |
-| 通常入力欄のEnter | Shift+Enterに変換して改行 |
-| 通常入力欄の⌘Enter | Enterに変換して送信 |
-| 引用への返信と質問への回答 | 元のキーをそのまま通す |
-| Shift、Alt、Ctrl、Fn付きEnter | 元のキーをそのまま通す |
-| 他のアプリやRaycastなどの重ね表示 | 元のキーをそのまま通す |
-| 入力欄や所有アプリを判別できない場合 | 元のキーをそのまま通す |
+| Enter in the regular prompt | Converts to Shift+Enter to insert a newline |
+| ⌘Enter in the regular prompt | Converts to Enter to send |
+| Quoted replies and question-answer fields | Passes the original key through |
+| Enter with Shift, Alt, Ctrl, or Fn | Passes the original key through |
+| Other applications and overlays such as Raycast | Passes the original key through |
+| Unrecognized input field or application owner | Passes the original key through |
 
-通常EnterとテンキーEnterを扱います。
-Caps Lockなどの既存のフラグを保持します。
-通常欄の送信用⌘Enterは長押しによる連続送信を抑止し、改行用Enterはリピートを許可します。
-変換した押下に対応するキー解放には、フォーカス移動後も同じ変換を適用します。
+Both Return and keypad Enter are handled.
+Existing raw flags, including Caps Lock, are preserved.
+Holding ⌘Enter in the regular prompt does not repeatedly send; holding Enter can repeat newlines.
+A transformed key-down gets the corresponding key-up transformation even if focus moves.
 
-## 対象
+## Requirements
 
-- macOS上のClaudeデスクトップアプリ
-- Claudeの日本語UI
-- Hammerspoonと、そのアクセシビリティ権限
+- Claude Desktop on macOS
+- The Japanese Claude UI
+- Hammerspoon with Accessibility permission
 
-対象のアプリ識別子は`com.anthropic.claudefordesktop`です。
-入力本文は取得せず、ログにも残しません。
+**This English README does not add support for the English Claude UI.**
+The target application identifier is `com.anthropic.claudefordesktop`.
+The configuration does not read or log input text.
 
-## 1. Hammerspoonを導入する
+## 1. Install Hammerspoon
 
-[Homebrew](https://docs.brew.sh/Installation)を利用している場合は、[公式のcask](https://formulae.brew.sh/cask/hammerspoon)から導入できます。
+If you use [Homebrew](https://docs.brew.sh/Installation), install the [official cask](https://formulae.brew.sh/cask/hammerspoon):
 
 ```sh
 brew install --cask hammerspoon
 ```
 
-Homebrewを使わない場合は、[Hammerspoon公式サイト](https://www.hammerspoon.org/)から配布版を取得して、アプリケーションフォルダへ配置してください。
-Hammerspoonを起動し、macOSの「システム設定 → プライバシーとセキュリティ → アクセシビリティ」でHammerspoonを許可します。
-許可しても反映されない場合は、Hammerspoonを終了してから起動し直します。
-起動と権限設定の詳細は[公式の導入ガイド](https://www.hammerspoon.org/go/)も参照してください。
+Alternatively, download Hammerspoon from its [official website](https://www.hammerspoon.org/) and place the app in your Applications folder.
+Launch Hammerspoon and allow it in macOS System Settings → Privacy & Security → Accessibility.
+If the permission does not take effect, quit and reopen Hammerspoon.
+See the [official setup guide](https://www.hammerspoon.org/go/) for installation and permission details.
 
-## 2. 既存のEnter変換と競合させない
+## 2. Disable conflicting Enter remaps
 
-Karabiner-ElementsなどでClaude用のEnter変換を使っている場合は、そのルールを無効にしてください。
-特に「⌘EnterをEnterにする」ルールが残ると、引用や質問の回答欄へ本来の⌘Enterが届かなくなります。
-他のアプリ用の設定や、日本語入力の切り替え設定をまとめて外す必要はありません。
+If Karabiner-Elements or another tool remaps Enter for Claude, disable that rule.
+An existing ⌘Enter-to-Enter rule prevents quoted replies and question-answer fields from receiving native ⌘Enter.
+Keep unrelated app rules and Japanese input-switching rules in place.
 
-## 3. ファイルを配置する
+## 3. Install the configuration
 
-次は、取得先を`$HOME/claude-desktop-send-keys`とする例です。
-同名の取得先が既にある場合は、新規にcloneせず、既存の内容を確認してください。
+This repository is currently private, so cloning requires repository access.
+The example below uses `$HOME/claude-desktop-send-keys` as the checkout directory.
+If that directory already exists, inspect its contents rather than cloning over it.
 
 ```sh
 git clone https://github.com/HidakaKoyo/claude-desktop-send-keys.git "$HOME/claude-desktop-send-keys"
@@ -60,106 +72,106 @@ mkdir -p "$HOME/.hammerspoon"
 cp -i claude_cmd_enter.lua "$HOME/.hammerspoon/claude_cmd_enter.lua"
 ```
 
-`cp -i`で上書きを聞かれた場合は、既存のモジュールを確認してから判断してください。
-メニューバーのHammerspoonから「Open Config」を開きます。
-既存の`~/.hammerspoon/init.lua`は上書きせず、次の2行を既存の設定に追加してください。
-同じモジュールを既に読み込んでいる場合は、重複して追加しません。
+If `cp -i` asks to overwrite a module, inspect the existing file before deciding.
+Choose **Open Config** from the Hammerspoon menu-bar menu.
+Add or merge these two lines into the existing `~/.hammerspoon/init.lua`; do not overwrite the file.
+Do not add a duplicate if this module is already loaded.
 
 ```lua
 claudeCmdEnter = require("claude_cmd_enter")
 assert(claudeCmdEnter.start(), "ClaudeのEnter設定を開始できませんでした")
 ```
 
-`init.example.lua`にも同じ例を収録しています。
-ほかのHammerspoon設定を含む`init.lua`全体と置き換えないでください。
-設定を保存し、メニューバーのHammerspoonから「Reload Config」を実行します。
-ログイン時にも使う場合は、HammerspoonのPreferencesでログイン時起動を有効にします。
-Hammerspoonが終了している間は、この設定は働きません。
+The same snippet is in [init.example.lua](init.example.lua).
+Do not replace an `init.lua` that contains other Hammerspoon configuration with this example.
+Save the file and choose **Reload Config** from the Hammerspoon menu.
+To use it after logging in, enable launch at login in Hammerspoon Preferences.
+The configuration only works while Hammerspoon is running.
 
-## 4. 導入後に確認する
+## 4. Check your installation
 
-検証用の会話を使い、送信しても問題のない文章で確認してください。
+Use a test conversation and text that is safe to send.
 
-- [ ] 通常入力欄でEnterを押すと、送信せずに改行する。
-- [ ] 通常入力欄で⌘Enterを押すと、文章を送信する。
-- [ ] 引用への返信欄で、⌘Enterによる本来の送信操作ができる。
-- [ ] 質問への回答欄で、⌘Enterによる本来の回答操作ができる。
-- [ ] 日本語変換中のEnterで変換を確定でき、その次のEnterで改行できる。
-- [ ] Claudeにフォーカスを置いてからRaycastなどを開いても、ランチャーのEnter操作ができる。
-- [ ] 別アプリのEnterと⌘Enterや、Shift+Enterなどの操作が変わらない。
-- [ ] ログインし直した後もHammerspoonが起動し、上記の操作ができる。
+- [ ] Enter in the regular prompt inserts a newline without sending.
+- [ ] ⌘Enter in the regular prompt sends the message.
+- [ ] Native ⌘Enter submission works in a quoted-reply field.
+- [ ] Native ⌘Enter answering works in a question-answer field.
+- [ ] Enter commits Japanese IME conversion, and the next Enter inserts a newline.
+- [ ] Enter works in Raycast or another launcher opened while Claude has focus.
+- [ ] Other apps' Enter and ⌘Enter, and combinations such as Shift+Enter, are unchanged.
+- [ ] Hammerspoon starts after logging in again, and the checks above still pass.
 
-## 判定の仕組みと制約
+## Detection and limitations
 
-通常欄は`AXRole = AXTextArea`かつ、名前が「プロンプト」である場合に限って変換します。
-名前は`AXDescription`、それが空の場合は`AXTitle`から取得します。
-引用欄の名前は「返信」、質問の自由回答欄の名前は「その他のオプション」として観察されています。
-アプリ名だけではランチャーの重ね表示を区別できないため、入力欄の所有PIDもClaudeのPIDと照合します。
-PIDが異なる場合や取得できない場合は、キーを変更しません。
+The regular prompt must have `AXRole = AXTextArea` and the name `プロンプト`.
+The name comes from `AXDescription`, falling back to `AXTitle` if it is empty.
+Observed names are `返信` for quoted replies and `その他のオプション` for free-form question answers.
+The focused element's owner PID must also match Claude's PID, because the application name alone cannot distinguish a launcher overlay.
+If the PID differs or cannot be read, the key is left unchanged.
 
-Claudeの更新や表示言語の変更によってラベルが変わると、通常欄でも変換されなくなる可能性があります。
-判別不能時は元のキーを通すため、その場合の誤送信防止は保証対象外です。
-日本語IMEの変換確定EnterもShift+Enterになるため、使用するIMEで必ず確認してください。
-IMEの変換中状態を推測して切り替える処理は入れていません。
-macOSのセキュア入力などでキーイベントを取得できない場合も、この設定は働きません。
+Claude updates or a UI-language change may change these labels and stop the regular-prompt remap from matching.
+Unrecognized fields pass the original key through, so accidental-send prevention is not guaranteed in those fields.
+Japanese IME conversion-commit Enter is also changed to Shift+Enter; check the IME you use.
+The configuration does not guess whether IME conversion is active.
+It cannot work when macOS Secure Input or another restriction prevents access to keyboard events.
 
-## 動かない場合
+## Troubleshooting
 
-- Hammerspoonが起動しているか確認し、「Reload Config」を実行します。
-- アクセシビリティ権限を確認し、許可が反映されていなければHammerspoonを再起動します。
-- 「Open Console」で設定の読み込みエラーを確認します。
-- KarabinerなどにClaude用のEnter変換が残っていないか確認します。
-- Claudeの表示言語と入力欄の名前が、上記の条件に一致するか確認します。
-- ランチャー表示中に変換されないのは意図した動作です。
-- 日本語変換を確定できない場合は一時停止し、使用するIMEでの確認が済むまで有効にしません。
+- Confirm Hammerspoon is running, then choose **Reload Config**.
+- Check Accessibility permission; restart Hammerspoon if a granted permission has not taken effect.
+- Choose **Open Console** and check for configuration-loading errors.
+- Check for remaining Claude Enter remaps in Karabiner or similar tools.
+- Check that Claude's UI language and input-field names match the conditions above.
+- Keys remaining unchanged while a launcher is open is expected behavior.
+- If Japanese conversion cannot be committed, pause the configuration until you have checked that IME.
 
-所有PIDの照合条件を外して対処しないでください。
-フォーカスを持つ別アプリのキーまで変換する原因になります。
+Do not remove the owner-PID check as a workaround.
+Doing so can remap keys belonging to another application that has input focus.
 
-## 一時停止と解除
+## Pause or remove
 
-キーを離した状態で、Hammerspoonの「Open Console」から次を実行すると一時停止します。
+Release the keys, open Hammerspoon's **Open Console**, and run:
 
 ```lua
 claudeCmdEnter.stop()
 ```
 
-再開は`claudeCmdEnter.start()`、または「Reload Config」です。
-継続して解除する場合は、`init.lua`に追加したこの設定の2行だけを外して「Reload Config」を実行します。
-解除後、不要なら`~/.hammerspoon/claude_cmd_enter.lua`も削除できます。
-ほかの設定を含む`init.lua`やHammerspoonの設定フォルダ全体は削除しません。
+Resume with `claudeCmdEnter.start()` or **Reload Config**.
+To keep it disabled, remove only the two lines added for this configuration from `init.lua`, then choose **Reload Config**.
+Once disabled, you can remove `~/.hammerspoon/claude_cmd_enter.lua` if no longer needed.
+Keep any `init.lua` and configuration directory that contain other settings.
 
-## テスト
+## Tests
 
-Lua 5.3以降を利用できる場合は、取得した作業フォルダで次を実行します。
+With Lua 5.3 or later available, run this from the checkout directory:
 
 ```sh
 lua test.lua
 ```
 
-Luaを別途導入しない場合は、Hammerspoonの「Open Console」でも実行できます。
-上記の配置例に合わせたコマンドは次の通りです。
+You can also use Hammerspoon's **Open Console** without installing a separate Lua interpreter.
+For the checkout location used above:
 
 ```lua
 dofile(os.getenv("HOME") .. "/claude-desktop-send-keys/test.lua")
 ```
 
-取得先を変えた場合は、`test.lua`の指定先も自分の作業フォルダに合わせてください。
-テストは実行中のルールとは別のモック上で動き、終了後に`hs`を元へ戻します。
-実際のキーイベントや送信は発生させません。
-`hs.ipc`の有効化は通常利用にも、このコンソール経由のテストにも不要です。
+If you chose another checkout directory, adjust the `test.lua` path accordingly.
+Tests run against a separate mock rather than the active rule and restore `hs` afterward.
+They do not emit real keyboard events or send messages.
+Enabling `hs.ipc` is not required for normal use or these console-based tests.
 
-## 確認できている範囲
+## Verification status
 
-確認環境はHammerspoon 1.1.1、Claudeデスクトップ5.1231.2の日本語UIです。
-モックテスト19件の成功を確認しています。
-Hammerspoon内のLuaで、絶対名と相対名によるテスト起動を確認しています。
-配布ファイルだけを置いた一時設定フォルダで、設定例からモジュールを読み込めることもモックで確認しています。
-独立したLua CLIでのテスト実行は未確認です。
-macOS標準の日本語入力を使った1環境では、変換確定Enterと、その次のEnterでの改行を確認しています。
-通常欄、引用欄、質問欄の3種類すべてから実際に送信する通し確認、再ログイン後の動作、別Macでの動作は未確認です。
-導入先で上記の確認項目を実行してください。
+The checked environment uses Hammerspoon 1.1.1 and Claude Desktop 5.1231.2 with the Japanese UI.
+All 19 mock tests pass.
+Test execution with both absolute and relative filenames has been checked in Hammerspoon's Lua runtime.
+The example's module loading has also been checked with mocks in a temporary configuration directory containing only the distribution files.
+Running the tests with a standalone Lua CLI remains unverified.
+In one environment with the standard macOS Japanese input method, Enter committed conversion and the next Enter inserted a newline.
+End-to-end submission from all three input types, operation after logging in again, and operation on another Mac remain unverified.
+Run the installation checks above in your own environment.
 
-## ライセンス
+## License
 
-[MIT License](LICENSE)です。
+[MIT License](LICENSE).
