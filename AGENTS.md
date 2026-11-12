@@ -4,7 +4,7 @@
 
 This repository provides a small Hammerspoon configuration for Claude Desktop on macOS.
 It is being developed privately; keep it private until the maintainer explicitly requests a visibility change.
-Read `README.md` and `docs/CONTINUATION_PROMPT.md` before continuing work.
+Read `README.md` and `docs/SETUP.md` before changing setup or code.
 
 ## Behavior to preserve
 
@@ -26,12 +26,12 @@ English documentation does not imply support for Claude's English UI.
 - `init.example.lua`: minimal integration with an existing Hammerspoon configuration.
 - `README.md`: English installation and operating guide.
 - `docs/README.ja.md`: Japanese version of the same guide.
-- `docs/CONTINUATION_PROMPT.md`: self-contained prompt for continuing development.
+- `docs/SETUP.md`: installation and validation steps for an agent setting up a Mac.
 
 Keep both README versions semantically equivalent; only the language and relative link paths should differ.
 When changing behavior, commands, limits, or validation status, update both versions in the same change.
 Do not add reader-facing policies or maintenance notes to only one language version.
-Maintain the language links and the agent-document links near the beginning of both READMEs.
+Maintain the language links, quick-start request, setup-guide link, and repository-instruction link near the beginning of both READMEs.
 Check relative links from each document's own directory.
 
 ## Implementation and validation

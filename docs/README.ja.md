@@ -6,12 +6,16 @@ Claudeデスクトップの通常入力欄を「Enterで改行、⌘Enterで送�
 引用への返信や質問への回答では本来の⌘Enterを残し、送信操作を妨げないようにします。
 この手順で、新しいMacにも同じ設定を導入できます。
 
-作業を引き継ぐ場合は、[AGENTS.md](../AGENTS.md)と[継続プロンプト](CONTINUATION_PROMPT.md)を参照してください。
-次の短い依頼文から続けられます。
+## クイックスタート
+
+エージェントに、このMacへの設定を次のように依頼できます。
 
 ```text
-AGENTS.md、README.md、docs/CONTINUATION_PROMPT.mdを読み、リポジトリをprivateのまま保ち、入力欄の所有PID照合を維持して残る検証を続けてください。
+https://github.com/HidakaKoyo/claude-desktop-send-keys をクローンし、docs/SETUP.mdに従って、このMacにClaudeデスクトップの設定を導入してください。
 ```
+
+[セットアップ手順](SETUP.md)に、エージェントが行う導入と動作確認の手順をまとめています。
+リポジトリの作業ルールは[AGENTS.md](../AGENTS.md)にあります。
 
 ## 動作
 

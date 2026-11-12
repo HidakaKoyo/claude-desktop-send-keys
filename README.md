@@ -6,13 +6,16 @@ A Hammerspoon configuration that makes Enter insert a newline and ⌘Enter send 
 It preserves the native ⌘Enter behavior in quoted replies and question-answer fields.
 Use this runbook to reproduce the configuration on another Mac.
 
-For further work, read [AGENTS.md](AGENTS.md) and the [continuation prompt](docs/CONTINUATION_PROMPT.md).
-You can start with this short request:
+## Quick start
+
+Ask a coding agent to set up this Mac:
 
 ```text
-Read AGENTS.md, README.md, and docs/CONTINUATION_PROMPT.md.
-Continue the remaining verification while keeping the repo private and preserving input-field ownership checks.
+Clone https://github.com/HidakaKoyo/claude-desktop-send-keys and follow docs/SETUP.md to configure Claude Desktop on this Mac.
 ```
+
+The [setup guide](docs/SETUP.md) gives the agent the installation and validation steps.
+Repository instructions are in [AGENTS.md](AGENTS.md).
 
 ## Behavior
 
