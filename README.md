@@ -52,6 +52,10 @@ brew install --cask hammerspoon
 
 Alternatively, download Hammerspoon from its [official website](https://www.hammerspoon.org/) and place the app in your Applications folder.
 Launch Hammerspoon and allow it in macOS System Settings → Privacy & Security → Accessibility.
+For agent-assisted setup, the agent should perform UI steps through available Computer Use within your authorization and the tool's rules, including required confirmations and user handoffs.
+It should explain and request only steps it cannot perform, such as required authentication or manual permission approval.
+After any required user action, the agent should resume setup.
+Confirm in Hammerspoon's **Open Console** that `hs.accessibilityState()` returns `true`.
 If the permission does not take effect, quit and reopen Hammerspoon.
 See the [official setup guide](https://www.hammerspoon.org/go/) for installation and permission details.
 

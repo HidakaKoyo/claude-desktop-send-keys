@@ -52,6 +52,11 @@ brew install --cask hammerspoon
 
 Homebrewを使わない場合は、[Hammerspoon公式サイト](https://www.hammerspoon.org/)から配布版を取得して、アプリケーションフォルダへ配置してください。
 Hammerspoonを起動し、macOSの「システム設定 → プライバシーとセキュリティ → アクセシビリティ」でHammerspoonを許可します。
+エージェントに導入を依頼した場合は、利用可能なComputer Useで、ユーザーの許可とツールのルールに従って画面操作を進めます。
+ツールが求める確認や、ユーザー本人による操作への引き継ぎにも従います。
+認証や手動での権限承認など、エージェントが実行できない操作だけ、理由と具体的な手順を示してユーザーへ依頼します。
+ユーザー操作後はエージェントが導入作業を再開します。
+権限は、Hammerspoonの「Open Console」で`hs.accessibilityState()`が`true`を返すことを確認します。
 許可しても反映されない場合は、Hammerspoonを終了してから起動し直します。
 起動と権限設定の詳細は[公式の導入ガイド](https://www.hammerspoon.org/go/)も参照してください。
 

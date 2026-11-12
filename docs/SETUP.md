@@ -2,6 +2,11 @@
 
 Follow these steps when asked to install this repository's Claude Desktop keyboard configuration.
 
+Use available Computer Use for UI steps throughout setup and validation within the user's authorization and the tool's rules, including required confirmations and user handoffs.
+Check the available tools and existing authorization before asking the user to operate the Mac.
+If a step requires unavailable tools, additional authorization, user authentication, or manual approval, explain why and request only that specific action.
+After the user completes it, resume the remaining work and verify the result.
+
 ## Check and record the current setup
 
 1. Read `AGENTS.md` and either `README.md` or `docs/README.ja.md` for the full runbook.
@@ -18,16 +23,17 @@ If the environment is unsupported, explain the limitation before changing settin
 
 ## Back up and enable
 
-1. Guide the user through the macOS Accessibility permission when necessary.
-2. If a granted permission has not taken effect, restart Hammerspoon and verify it again.
-3. In the README's copy block, use the default `HS_CONFIG_DIR` assignment only when the console result matches it; otherwise replace the assignment with the actual effective directory.
-4. Use the block's private local backup before copying or editing existing files; it saves existing `init.lua`, the module, and the effective-directory record.
-5. Keep the printed backup location and the pre-change settings note outside the repository; stop if a backup command fails.
-6. Disable only conflicting Claude Enter remaps whose prior state has been recorded, preserving unrelated rules.
-7. Place `claude_cmd_enter.lua` in the effective directory rather than a second default directory.
-8. If `init.lua` is absent, create it in that same directory with the two lines from `init.example.lua`; otherwise merge those lines without replacing other settings or adding duplicate loads.
-9. Reload the Hammerspoon configuration and verify that the rule starts without errors.
-10. Enable Hammerspoon's launch-at-login preference for persistent use unless the user requests otherwise, preserving its previous state for restoration.
+1. Check whether Hammerspoon already has macOS Accessibility permission.
+2. If missing, open System Settings → Privacy & Security → Accessibility and enable Hammerspoon using Computer Use where permitted; request only any required user confirmation, authentication, or manual action under the rules above.
+3. Verify in Hammerspoon's **Open Console** that `hs.accessibilityState()` returns `true`; if a granted permission has not taken effect, quit and reopen Hammerspoon and check again.
+4. In the README's copy block, use the default `HS_CONFIG_DIR` assignment only when the console result matches it; otherwise replace the assignment with the actual effective directory.
+5. Use the block's private local backup before copying or editing existing files; it saves existing `init.lua`, the module, and the effective-directory record.
+6. Keep the printed backup location and the pre-change settings note outside the repository; stop if a backup command fails.
+7. Disable only conflicting Claude Enter remaps whose prior state has been recorded, preserving unrelated rules.
+8. Place `claude_cmd_enter.lua` in the effective directory rather than a second default directory.
+9. If `init.lua` is absent, create it in that same directory with the two lines from `init.example.lua`; otherwise merge those lines without replacing other settings or adding duplicate loads.
+10. Reload the Hammerspoon configuration and verify that the rule starts without errors.
+11. Enable Hammerspoon's launch-at-login preference for persistent use unless the user requests otherwise, preserving its previous state for restoration.
 
 Use the shell and Lua examples in the README, adapting the clone step if the checkout already exists.
 Do not add dependencies, services, or changes to the runtime implementation to complete installation.
@@ -86,4 +92,5 @@ Never delete the whole configuration directory or restore a backup unconditional
 Report the effective configuration directory, files changed on the current Mac, backup location, permission status, startup status, and which checks actually ran.
 Keep paths and backup details in the private local report rather than committing them.
 Distinguish mock-test results from real application behavior and list any remaining checks.
+If a permission or manual step still awaits user action, identify the exact step and report setup as incomplete.
 Do not copy personal settings, credentials, message contents, screenshots, or real-machine logs into the repository.

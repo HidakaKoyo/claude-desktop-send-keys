@@ -5,6 +5,14 @@
 This repository provides a small Hammerspoon configuration for Claude Desktop on macOS.
 Read `README.md` and `docs/SETUP.md` before changing setup or code.
 
+## Setup UI actions
+
+Use available Computer Use for setup and validation UI actions within the user's authorization and the tool's rules, including any required confirmations or user handoffs.
+Check the available tools and existing authorization before asking the user to operate the Mac.
+Ask the user only for specific steps the agent cannot perform because tools or authorization are unavailable, or user authentication or manual approval is required.
+Explain the reason and exact action, then resume the remaining work and verify the result after the user completes that step.
+For Accessibility permission, verify that Hammerspoon itself recognizes the permission before treating it as enabled.
+
 ## Behavior to preserve
 
 - In Claude's normal prompt field, Enter inserts a newline and Command+Enter sends.
